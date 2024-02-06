@@ -1,2 +1,3 @@
-# paraff
-A sheet music DSL for algorithmic musical composition
+# PARAFF
+
+**PARAFF** is a sheet music domian-specific language, designed for algorithmic musical composition.
