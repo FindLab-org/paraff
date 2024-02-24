@@ -1,0 +1,27 @@
+{
+  "name": "paraff",
+  "version": "1.0.0",
+  "description": "**PARAFF** is a sheet music domian-specific language, designed for algorithmic musical composition.",
+  "source": "./index.ts",
+  "scripts": {
+    "postinstall": "ts-node ./tools/buildJisonParser.ts",
+    "test": "ts-node ./tests/parser.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FindLab-org/paraff.git"
+  },
+  "author": "k.l.lambda",
+  "license": "ISC",
+  "homepage": "https://github.com/FindLab-org/paraff#readme",
+  "dependencies": {
+    "typescript": "^5.3.3",
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.20",
+    "jison": "^0.4.18",
+	"lotus": "git+ssh://git@github.com:k-l-lambda/lotus.git#f64031f",
+    "ts-node": "^10.9.2"
+  }
+}
