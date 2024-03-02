@@ -36,13 +36,13 @@ Sheet music:
 
 * Convertable from/to Lilypond
 
-	Lilypond is an expressive music language, with comprehensive functionaliy engraving program.
-	Paraff is designed refer to Lilypond,
+	[Lilypond](https://lilypond.org/) is an expressive music language, with comprehensive functionaliy engraving program.
+	Paraff is designed refering to Lilypond,
 	whose context dependent grammars were simplified,
 	and scope symbols were removed.
 
 	Paraff score can be losslessly converted into Lilypond.
-	Most regular Lilypond scores can be converted into Paraff. However, there are some restriction in grammar for complex scores.
+	Most regular Lilypond scores can be converted into Paraff. However, there are some restriction in grammar usage for complex scores.
 
 * Parseable into JSON
 
