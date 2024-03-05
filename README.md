@@ -36,7 +36,7 @@ Sheet music:
 
 * Convertable from/to Lilypond
 
-	[Lilypond](https://lilypond.org/) is an expressive music language, with comprehensive functionaliy engraving program.
+	[Lilypond](https://lilypond.org/) is a strong expressive music language, whose engraving program with comprehensive functionaliy.
 	Paraff is designed refering to Lilypond,
 	whose context dependent grammars were simplified,
 	and scope symbols were removed.
