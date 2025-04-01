@@ -26,11 +26,15 @@ Sheet music:
 
 ## A Complex Sample
 
+Paraff code:
+
 ```paraff
 BOM K4 TN3 TD8 S1 Cg Mu f As Osup D32 Bl d As D32 b D32 g As D32 Br S2 f As Osub D32 Bl d As D32 f As D32 g As D32 Br S1 Md d As Osup D32 Bl S2 Mu g As Osub D32 S1 Md b D32 d As D32 Br VB
 S2 Cf b D8 Bl S1 d As Osup D8 EslurL f As D8 Br EslurR VB
 S2 Cf Md b Osub d As D8 Bl b D8 b D8 Br EOM
 ```
+
+Lilypond code:
 
 ```lilypond
 \score {
@@ -52,10 +56,14 @@ S2 Cf Md b Osub d As D8 Bl b D8 b D8 Br EOM
 }
 ```
 
+Sheet music:
+
 ![a complex grand staff](doc/complex-grand-staff.svg)
 
 
 ## Grammar Tree
+
+An example to illustrate grammar tree of PARAFF.
 
 ![](doc/syntax-sample1.drawio.svg)
 
