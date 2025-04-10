@@ -1,6 +1,64 @@
 
 %{
+	const header = (name, value) => {
+		return {
+			name,
+			value,
+		};
+	};
 
+
+	const event = (chord, duration) => {
+		return {
+			chord,
+			duration,
+		};
+	};
+
+
+	const pitch = (acc, phonet, quotes) => {
+		return {
+			acc,
+			phonet,
+			quotes,
+		};
+	};
+
+
+	const measure = (voice, music, bar) => {
+		return {
+			music,
+			bar,
+		};
+	};
+
+
+	const assign = (name, value) => {
+		return {
+			name,
+			value,
+		};
+	};
+
+
+	const frac = (numerator, denominator) => {
+		return {
+			numerator,
+			denominator,
+		};
+	};
+
+
+	const articulation = (content, scope) => ({
+		articulation: content,
+		scope,
+	});
+
+
+	const tune = (header, body) => ({
+		header,
+		body,
+	});
 %}
 
 
@@ -39,7 +97,7 @@ COMMENTS							^[%].*
 {Z}									return 'Z'
 {x}									return 'x'
 {N}									return 'N'
-\b[ms]?[pf]+[z]?\b					return 'DYNAMIC'
+//\b[ms]?[pf]+[z]?\b					return 'DYNAMIC'
 
 [a-z][\w-]*							return 'NAME'
 
@@ -55,31 +113,31 @@ COMMENTS							^[%].*
 %%
 
 start_symbol
-	: tunes EOF		{ return $1; }
+	: tunes EOF							{ return $1; }
 	;
 
 tunes
-	: tune			{ $$ = [$1]; }
-	| tunes tune	{ $$ = [...$1, $2]; }
+	: tune								-> [$1]
+	| tunes tune						-> [...$1, $2]
 	;
 
 tune
-	: header body
+	: header body						-> tune($1, $2)
 	| body
 	;
 
 header
-	: head_lines			{ $$ = $1; }
+	: head_lines
 	;
 
 head_lines
-	: head_line				{ $$ = [$1]; }
-	| head_lines head_line	{ $$ = [...$1, $2]; }
+	: head_line							-> [$1]
+	| head_lines head_line				-> [...$1, $2]
 	;
 
 head_line
-	: H ':' header_value
-	| V ':' header_value
+	: H ':' header_value				-> header($1, $3)
+	| V ':' header_value				-> header($1, $3)
 	;
 
 header_value
@@ -96,12 +154,12 @@ body
 	;
 
 frac
-	: number '/' number
+	: number '/' number					-> frac($1, $3)
 	;
 
 number
-	: N
-	| number N
+	: N									-> Number($1)
+	| number N							-> $1 * 10 + Number($2)
 	;
 
 numeric_tempo
@@ -115,12 +173,12 @@ voice_exp
 	;
 
 assigns
-	: assign
-	| assigns assign
+	: assign							-> [$1]
+	| assigns assign					-> [...$1, $2]
 	;
 
 assign
-	: NAME '=' assign_value
+	: NAME '=' assign_value				-> assign($1, $3)
 	;
 
 assign_value
@@ -137,38 +195,58 @@ lower_phonet
 	;
 
 measures
-	: measure
-	| measures measure
+	: measure							-> [$1]
+	| measures measure					-> [...$1, $2]
 	;
 
 measure
-	: music_voice music bar
+	: music_voice music bar				-> measure($1, $2, $3)
 	;
 
 bar
-	: '|'
-	| '|' ':'
-	| ':' '|'
-	| '|' ']'
+	: '|'								-> 'bar'
+	| '|' ':'							-> 'voltaL'
+	| ':' '|'							-> 'voltaR'
+	| '|' ']'							-> 'terminator'
 	;
 
 music_voice
-	: '[' 'V' ':' number ']'
+	: '[' 'V' ':' number ']'			-> ({voice: $3})
 	;
 
 music
-	: %empty
-	| music expressive_mark
-	| music text
-	| music note
+	: %empty							-> []
+	| music expressive_mark				-> $1 ? [...$1, $2] : []
+	| music text						-> $1 ? [...$1, $2] : []
+	| music event						-> $1 ? [...$1, $2] : []
 	;
 
 expressive_mark
-	: '!'
+	: articulation
 	| '('
 	| ')'
 	| '.'
-	| DYNAMIC
+	;
+
+articulation
+	: '!' articulation_content '!' 		-> $2
+	;
+
+articulation_content
+	: NAME								-> articulation($1)
+	| scope_articulation parenthese		-> articulation($1, $2)
+	| '<'								-> articulation($1)
+	| '>'								-> articulation($1)
+	;
+
+scope_articulation
+	: '<'
+	| '>'
+	;
+
+parenthese
+	: '('
+	| ')'
 	;
 
 text
@@ -176,17 +254,17 @@ text
 	;
 
 pitch_or_chord
-	: pitch
+	: pitch								-> [$1]
 	| chord
 	;
 
 chord
-	: '[' pitches ']'
+	: '[' pitches ']'					-> $2
 	;
 
 pitches
-	: pitch
-	| pitches pitch
+	: pitch								-> [$1]
+	| pitches pitch						-> [...$1, $2]
 	;
 
 quotes
@@ -195,13 +273,13 @@ quotes
 	;
 
 sub_quotes
-	: ','
-	| sub_quotes ','
+	: ','								-> -1
+	| sub_quotes ','					-> $1 - 1
 	;
 
 sup_quotes
-	: "'"
-	| sup_quotes "'"
+	: "'"								-> 1
+	| sup_quotes "'"					-> $1 + 1
 	;
 
 accidentals
@@ -210,12 +288,12 @@ accidentals
 	;
 
 pitch
-	: phonet
-	| phonet quotes
-	| accidentals phonet
-	| accidentals phonet quotes
-	| x
-	| rest_phonet
+	: phonet							-> pitch(null, $1, null)
+	| phonet quotes						-> pitch(null, $1, $2)
+	| accidentals phonet				-> pitch($1, $2, null)
+	| accidentals phonet quotes			-> pitch($1, $2, $3)
+	| x									-> pitch(null, $1, null)
+	| rest_phonet						-> pitch(null, $1, null)
 	;
 
 phonet
@@ -228,11 +306,11 @@ rest_phonet
 	| Z
 	;
 
-note
-	: pitch_or_chord
-	| pitch_or_chord division
+event
+	: pitch_or_chord					-> event($1)
+	| pitch_or_chord duration			-> event($1, $2)
 	;
 
-division
+duration
 	: number
 	;
