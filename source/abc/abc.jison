@@ -27,6 +27,7 @@
 
 	const measure = (voice, music, bar) => {
 		return {
+			voice,
 			music,
 			bar,
 		};
@@ -211,7 +212,7 @@ bar
 	;
 
 music_voice
-	: '[' 'V' ':' number ']'			-> ({voice: $3})
+	: '[' 'V' ':' number ']'			-> $4
 	;
 
 music
