@@ -25,9 +25,8 @@
 	};
 
 
-	const measure = (voice, music, bar) => {
+	const measure = (music, bar) => {
 		return {
-			voice,
 			music,
 			bar,
 		};
@@ -69,7 +68,7 @@
 
 STR									["][^"]*["]
 
-V									\b[V](?=\:)
+//F									(?:[\[])[A-Z](?=\:)
 H									\b[A-Z](?=\:)
 A									\b[A-G](?=[\W\d\s])
 a									\b[a-g](?=[\W\d\s])
@@ -90,7 +89,7 @@ COMMENTS							^[%].*
 
 {SPECIAL}							return yytext;
 
-{V}									return 'V'
+//{F}									return 'F'
 {H}									return 'H'
 {A}									return 'A'
 {a}									return 'a'
@@ -98,7 +97,7 @@ COMMENTS							^[%].*
 {Z}									return 'Z'
 {x}									return 'x'
 {N}									return 'N'
-//\b[ms]?[pf]+[z]?\b					return 'DYNAMIC'
+\b[ms]?[pf]+[z]?\b					return 'DYNAMIC'
 
 [a-z][\w-]*							return 'NAME'
 
@@ -138,7 +137,6 @@ head_lines
 
 head_line
 	: H ':' header_value				-> header($1, $3)
-	| V ':' header_value				-> header($1, $3)
 	;
 
 header_value
@@ -201,7 +199,7 @@ measures
 	;
 
 measure
-	: music_voice music bar				-> measure($1, $2, $3)
+	: music bar							-> measure($1, $2)
 	;
 
 bar
@@ -216,10 +214,15 @@ music_voice
 	;
 
 music
-	: %empty							-> []
-	| music expressive_mark				-> $1 ? [...$1, $2] : []
-	| music text						-> $1 ? [...$1, $2] : []
-	| music event						-> $1 ? [...$1, $2] : []
+	: %empty
+	| music expressive_mark				-> $1 ? [...$1, $2] : [$2]
+	| music text						-> $1 ? [...$1, $2] : [$2]
+	| music event						-> $1 ? [...$1, $2] : [$2]
+	| music control						-> $1 ? [...$1, $2] : [$2]
+	;
+
+control
+	: '[' H ':' header_value ']'		-> header($2, $4)
 	;
 
 expressive_mark
@@ -238,6 +241,7 @@ articulation_content
 	| scope_articulation parenthese		-> articulation($1, $2)
 	| '<'								-> articulation($1)
 	| '>'								-> articulation($1)
+	| DYNAMIC							-> articulation($1)
 	;
 
 scope_articulation
