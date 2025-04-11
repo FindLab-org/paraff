@@ -59,6 +59,23 @@
 		header,
 		body,
 	});
+
+
+	const grace = events => ({
+		grace: true,
+		events,
+	});
+
+
+	const chord = (pitches, tie) => ({
+		pitches,
+		tie,
+	});
+
+
+	const staffShift = (shift) => ({
+		staffShift: shift,
+	});
 %}
 
 
@@ -68,18 +85,15 @@
 
 %x string
 
-//STR									["][^"]*["]
-
-//F									(?:[\[])[A-Z](?=\:)
 H									\b[A-Z](?=\:)
-A									\b[A-G](?=[\W\d\sA-Ga-g]*\b)
-a									\b[a-g](?=[\W\d\sA-Ga-g]*\b)
+A									\b[A-G](?=[\W\d\sA-Ga-g_]*\b)
+a									\b[a-g](?=[\W\d\sA-Ga-g_]*\b)
 z									\b[z]
 Z									\b[Z]
 x									\b[x](?=[\W\d\s])
 N									[0-9]
 
-SPECIAL								[:!^_,'/<>={}()\[\]|.]
+SPECIAL								[:!^_,'/<>={}()\[\]|.\-+]
 
 COMMENTS							^[%].*
 
@@ -96,7 +110,6 @@ COMMENTS							^[%].*
 
 {SPECIAL}							return yytext;
 
-//{F}									return 'F'
 {H}									return 'H'
 {A}									return 'A'
 {a}									return 'a'
@@ -106,9 +119,8 @@ COMMENTS							^[%].*
 {N}									return 'N'
 \b[ms]?[pf]+[z]?\b					return 'DYNAMIC'
 
+"staff"								return 'STAFF'
 [a-z][\w-]*							return 'NAME'
-
-//{STR}								return 'STR'
 
 <<EOF>>								return 'EOF';
 
@@ -153,6 +165,16 @@ header_value
 	| numeric_tempo
 	| upper_phonet
 	| voice_exp
+	| staff_shift
+	;
+
+staff_shift
+	: 'STAFF' plus_minus_number			-> staffShift($2)
+	;
+
+plus_minus_number
+	: '+' number						-> Number($2)
+	| '-' number						-> -Number($2)
 	;
 
 string
@@ -234,6 +256,7 @@ music
 	| music expressive_mark				-> $1 ? [...$1, $2] : [$2]
 	| music text						-> $1 ? [...$1, $2] : [$2]
 	| music event						-> $1 ? [...$1, $2] : [$2]
+	| music grace_events				-> $1 ? [...$1, $2] : [$2]
 	| music control						-> $1 ? [...$1, $2] : [$2]
 	;
 
@@ -256,8 +279,7 @@ articulation
 articulation_content
 	: NAME								-> articulation($1)
 	| scope_articulation parenthese		-> articulation($1, $2)
-	| '<'								-> articulation($1)
-	| '>'								-> articulation($1)
+	| scope_articulation				-> articulation($1)
 	| DYNAMIC							-> articulation($1)
 	;
 
@@ -276,17 +298,22 @@ text
 	;
 
 pitch_or_chord
-	: pitch								-> [$1]
+	: maybe_tied_pitch					-> [$1]
 	| chord
 	;
 
 chord
-	: '[' pitches ']'					-> $2
+	: '[' pitches ']'					-> chord($2)
 	;
 
 pitches
-	: pitch								-> [$1]
-	| pitches pitch						-> [...$1, $2]
+	: maybe_tied_pitch					-> [$1]
+	| pitches maybe_tied_pitch			-> [...$1, $2]
+	;
+
+maybe_tied_pitch
+	: pitch
+	| '=' pitch						-	-> ({tied: true, ...$2})
 	;
 
 quotes
@@ -333,6 +360,18 @@ event
 	| pitch_or_chord duration			-> event($1, $2)
 	;
 
+events
+	: event								-> [$1]
+	| events event						-> [...$1, $2]
+	;
+
+grace_events
+	: '{' events '}'					-> grace($2)
+	;
+
 duration
-	: number
+	: number '/' number					-> frac(Number($1), Number($3))
+	| '/' number						-> frac(1, Number($2))
+	| number							-> frac(Number($1))
+	| '/'								-> frac(1, 2)
 	;
