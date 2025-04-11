@@ -66,12 +66,14 @@
 
 %option flex unicode
 
-STR									["][^"]*["]
+%x string
+
+//STR									["][^"]*["]
 
 //F									(?:[\[])[A-Z](?=\:)
 H									\b[A-Z](?=\:)
-A									\b[A-G](?=[\W\d\s])
-a									\b[a-g](?=[\W\d\s])
+A									\b[A-G](?=[\W\d\sA-Ga-g]*\b)
+a									\b[a-g](?=[\W\d\sA-Ga-g]*\b)
 z									\b[z]
 Z									\b[Z]
 x									\b[x](?=[\W\d\s])
@@ -83,6 +85,11 @@ COMMENTS							^[%].*
 
 
 %%
+
+\"									{ this.pushState('string'); return 'STR_START'; }
+<string>\"							{ this.popState(); return 'STR_END'; }
+<string>\\\"						return 'STR_CONTENT'
+<string>[^"]+						return 'STR_CONTENT'
 
 \s+									{}
 {COMMENTS}							{}
@@ -101,7 +108,7 @@ COMMENTS							^[%].*
 
 [a-z][\w-]*							return 'NAME'
 
-{STR}								return 'STR'
+//{STR}								return 'STR'
 
 <<EOF>>								return 'EOF';
 
@@ -140,12 +147,21 @@ head_line
 	;
 
 header_value
-	: STR
+	: string
 	| number
 	| frac
 	| numeric_tempo
 	| upper_phonet
 	| voice_exp
+	;
+
+string
+	: STR_START string_content STR_END	-> $2
+	;
+
+string_content
+	: %empty							-> ""
+	| string_content STR_CONTENT		-> $1 ? $1 + $2 : $2
 	;
 
 body
@@ -181,7 +197,7 @@ assign
 	;
 
 assign_value
-	: STR
+	: string
 	| number
 	;
 
@@ -230,6 +246,7 @@ expressive_mark
 	| '('
 	| ')'
 	| '.'
+	| '='
 	;
 
 articulation
@@ -255,7 +272,7 @@ parenthese
 	;
 
 text
-	: STR
+	: string
 	;
 
 pitch_or_chord
