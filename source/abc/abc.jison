@@ -76,6 +76,11 @@
 	const staffShift = (shift) => ({
 		staffShift: shift,
 	});
+
+
+	const comment = (text) => ({
+		comment: text,
+	});
 %}
 
 
@@ -84,6 +89,9 @@
 %option flex unicode
 
 %x string
+%x comment
+%x spec_comment
+
 
 H									\b[A-Z](?=\:)
 A									\b[A-G](?=[\W\d\sA-Ga-g_]*\b)
@@ -95,7 +103,7 @@ N									[0-9]
 
 SPECIAL								[:!^_,'/<>={}()\[\]|.\-+]
 
-COMMENTS							^[%].*
+//COMMENTS							^[%].*
 
 
 %%
@@ -105,10 +113,20 @@ COMMENTS							^[%].*
 <string>\\\"						return 'STR_CONTENT'
 <string>[^"]+						return 'STR_CONTENT'
 
-\s+									{}
-{COMMENTS}							{}
+^[%]								{ this.pushState('comment'); }
+<comment>[%]						{ this.pushState('spec_comment'); }
+<comment>[^\n]+						{ return 'COMMENT'; }
+<spec_comment>\n					{ this.popState(); this.popState(); }
+<comment>\n							{ this.popState(); }
+<spec_comment>\s					{}
+<spec_comment>"score"				return 'SCORE'
+<spec_comment>[\d]+					return 'NN'
+<spec_comment>[(){}\[\]|]			return yytext
 
-{SPECIAL}							return yytext;
+\s+									{}
+//{COMMENTS}							{}
+
+{SPECIAL}							return yytext
 
 {H}									return 'H'
 {A}									return 'A'
@@ -122,7 +140,7 @@ COMMENTS							^[%].*
 "staff"								return 'STAFF'
 [a-z][\w-]*							return 'NAME'
 
-<<EOF>>								return 'EOF';
+<<EOF>>								return 'EOF'
 
 
 /lex
@@ -151,7 +169,35 @@ header
 
 head_lines
 	: head_line							-> [$1]
+	| comment							-> [$1]
 	| head_lines head_line				-> [...$1, $2]
+	| head_lines comment				-> [...$1, $2]
+	| head_lines staff_layout_statement	-> [...$1, $2]
+	;
+
+comment
+	: COMMENT							-> comment($1)
+	;
+
+staff_layout_statement
+	: 'SCORE' staff_layout				-> $2
+	;
+
+staff_layout
+	: staff_layout_items
+	;
+
+staff_layout_items
+	: staff_layout_item						-> [$1]
+	| staff_layout_items staff_layout_item	-> [...$1, $2]
+	| staff_layout_items '|'				-> $1
+	;
+
+staff_layout_item
+	: NN
+	| '(' staff_layout_items ')'
+	| '[' staff_layout_items ']'
+	| '{' staff_layout_items '}'
 	;
 
 head_line
@@ -234,6 +280,7 @@ lower_phonet
 measures
 	: measure							-> [$1]
 	| measures measure					-> [...$1, $2]
+	| measures comment					-> $1
 	;
 
 measure
