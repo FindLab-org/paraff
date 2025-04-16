@@ -81,6 +81,12 @@
 	const comment = (text) => ({
 		comment: text,
 	});
+
+
+	const staffGroup = (items, bound) => ({
+		items,
+		bound,
+	});
 %}
 
 
@@ -194,10 +200,10 @@ staff_layout_items
 	;
 
 staff_layout_item
-	: NN
-	| '(' staff_layout_items ')'
-	| '[' staff_layout_items ']'
-	| '{' staff_layout_items '}'
+	: NN								-> staffGroup([$1])
+	| '(' staff_layout_items ')'		-> staffGroup($2, 'arc')
+	| '[' staff_layout_items ']'		-> staffGroup($2, 'square')
+	| '{' staff_layout_items '}'		-> staffGroup($2, 'curly')
 	;
 
 head_line
