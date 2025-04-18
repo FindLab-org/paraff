@@ -18,6 +18,7 @@ const build = async (jison: string, target?: string): Promise<void> => {
 
 const main = async () => {
 	await build("./source/paraff/paraff.jison", "./source/paraff/grammar.jison.js");
+	await build("./source/abc/abc.jison", "./source/abc/grammar.jison.js");
 
 	console.log("Done.");
 };
