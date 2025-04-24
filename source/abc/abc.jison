@@ -33,10 +33,16 @@
 	};
 
 
+	const voice = (number, assign, properties) => ({
+		number,
+		assign,
+		properties,
+	});
+
+
 	const assign = (name, value) => {
 		return {
-			name,
-			value,
+			[name]: value,
 		};
 	};
 
@@ -61,8 +67,9 @@
 	});
 
 
-	const grace = events => ({
+	const grace = (events, acciaccatura) => ({
 		grace: true,
+		acciaccatura,
 		events,
 	});
 
@@ -106,6 +113,7 @@ z									\b[z]
 Z									\b[Z]
 x									\b[x](?=[\W\d\s])
 N									[0-9]
+P									\b[P](?=[A-Ga-g]\b)
 
 SPECIAL								[:!^_,'/<>={}()\[\]|.\-+]
 
@@ -139,6 +147,7 @@ SPECIAL								[:!^_,'/<>={}()\[\]|.\-+]
 {a}									return 'a'
 {z}									return 'z'
 {Z}									return 'Z'
+{P}									return 'P'
 {x}									return 'x'
 {N}									return 'N'
 \b[ms]?[pf]+[z]?\b					return 'DYNAMIC'
@@ -256,14 +265,14 @@ numeric_tempo
 	;
 
 voice_exp
-	: number
-	| number NAME
-	| number NAME assigns
+	: number							-> voice($1)
+	| number NAME						-> voice($1, $2)
+	| number NAME assigns				-> voice($1, $2, $3)
 	;
 
 assigns
-	: assign							-> [$1]
-	| assigns assign					-> [...$1, $2]
+	: assign							-> $1
+	| assigns assign					-> ({...$1, ...$2})
 	;
 
 assign
@@ -294,10 +303,14 @@ measure
 	;
 
 bar
-	: '|'								-> 'bar'
-	| '|' ':'							-> 'voltaL'
-	| ':' '|'							-> 'voltaR'
-	| '|' ']'							-> 'terminator'
+	: '|'								-> '|'
+	| '|' ':'							-> '|:'
+	| ':' '|'							-> ':|'
+	| ':' ':'							-> ':|:'
+	| '|' '|'							-> '||'
+	| '|' ']'							-> '|]'
+	| '|' N								-> '|' + $2
+	| ':' '|' N							-> ':|' + $2
 	;
 
 music_voice
@@ -322,11 +335,12 @@ expressive_mark
 	| '('
 	| ')'
 	| '.'
-	| '='
+	| '-'
 	;
 
 articulation
 	: '!' articulation_content '!' 		-> $2
+	| P									-> articulation("prall")
 	;
 
 articulation_content
@@ -351,7 +365,7 @@ text
 	;
 
 pitch_or_chord
-	: maybe_tied_pitch					-> [$1]
+	: pitch								-> [$1]
 	| chord
 	;
 
@@ -360,13 +374,8 @@ chord
 	;
 
 pitches
-	: maybe_tied_pitch					-> [$1]
-	| pitches maybe_tied_pitch			-> [...$1, $2]
-	;
-
-maybe_tied_pitch
-	: pitch
-	| '=' pitch						-	-> ({tied: true, ...$2})
+	: pitch								-> [$1]
+	| pitches pitch						-> [...$1, $2]
 	;
 
 quotes
@@ -387,6 +396,7 @@ sup_quotes
 accidentals
 	: '^'
 	| '_'
+	| '='
 	;
 
 pitch
@@ -420,6 +430,7 @@ events
 
 grace_events
 	: '{' events '}'					-> grace($2)
+	| '{' '/' events '}'				-> grace($3, true)
 	;
 
 duration
@@ -427,4 +438,6 @@ duration
 	| '/' number						-> frac(1, Number($2))
 	| number							-> frac(Number($1))
 	| '/'								-> frac(1, 2)
+	| '>'
+	| '<'
 	;
