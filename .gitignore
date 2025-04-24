@@ -10,3 +10,5 @@ package-lock.json
 
 # build this file by tools/buildJisonParser.ts
 *.jison.js
+
+footages/
