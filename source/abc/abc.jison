@@ -94,6 +94,12 @@
 		items,
 		bound,
 	});
+
+
+	const tempo = (note, bpm) => ({
+		note,
+		bpm,
+	});
 %}
 
 
@@ -175,7 +181,6 @@ tunes
 
 tune
 	: header body						-> tune($1, $2)
-	| body
 	;
 
 header
@@ -199,7 +204,7 @@ staff_layout_statement
 	;
 
 staff_layout
-	: staff_layout_items
+	: staff_layout_items				-> ({staffLayout: $1})
 	;
 
 staff_layout_items
@@ -261,7 +266,7 @@ number
 	;
 
 numeric_tempo
-	: frac '=' number
+	: frac '=' number					-> tempo($1, $3)
 	;
 
 voice_exp
@@ -327,7 +332,7 @@ music
 	;
 
 control
-	: '[' H ':' header_value ']'		-> header($2, $4)
+	: '[' H ':' header_value ']'		-> ({control: header($2, $4)})
 	;
 
 expressive_mark
@@ -361,7 +366,7 @@ parenthese
 	;
 
 text
-	: string
+	: string							-> ({text: $1})
 	;
 
 pitch_or_chord
@@ -419,8 +424,8 @@ rest_phonet
 	;
 
 event
-	: pitch_or_chord					-> event($1)
-	| pitch_or_chord duration			-> event($1, $2)
+	: pitch_or_chord					-> ({event: event($1)})
+	| pitch_or_chord duration			-> ({event: event($1, $2)})
 	;
 
 events
