@@ -232,6 +232,7 @@ header_value
 	| upper_phonet
 	| voice_exp
 	| staff_shift
+	| NAME
 	;
 
 staff_shift
@@ -318,10 +319,6 @@ bar
 	| ':' '|' N							-> ':|' + $2
 	;
 
-music_voice
-	: '[' 'V' ':' number ']'			-> $4
-	;
-
 music
 	: %empty
 	| music expressive_mark				-> $1 ? [...$1, $2] : [$2]
@@ -353,6 +350,7 @@ articulation_content
 	| scope_articulation parenthese		-> articulation($1, $2)
 	| scope_articulation				-> articulation($1)
 	| DYNAMIC							-> articulation($1)
+	| a									-> articulation($1)
 	;
 
 scope_articulation
