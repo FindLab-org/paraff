@@ -334,10 +334,10 @@ control
 
 expressive_mark
 	: articulation
-	| '('
-	| ')'
-	| '.'
-	| '-'
+	| '('								-> ({express: $1})
+	| ')'								-> ({express: $1})
+	| '.'								-> ({express: $1})
+	| '-'								-> ({express: $1})
 	;
 
 articulation

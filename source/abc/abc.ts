@@ -55,7 +55,20 @@ namespace ABC {
 
 
 	interface Articulation {
-		articulation: string;
+		articulation: Token;
+		scope: Token;
+	};
+
+
+	interface ExpressiveMark {
+		express: Token;
+	};
+
+
+	interface Grace {
+		grace: boolean;
+		acciaccatura: Token;
+		events: Event[];
 	};
 
 
@@ -64,7 +77,7 @@ namespace ABC {
 	};
 
 
-	export type Term = Event | Control | Text;
+	export type Term = Event | Control | Text | Articulation | ExpressiveMark | Grace;
 
 
 	type Header = KeyValue | Comment;
