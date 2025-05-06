@@ -8,17 +8,20 @@ namespace ABC {
 
 
 	export interface Pitch {
+		acc: string|null;
+		phonet: Token;
+		quotes: number|null;
 	};
 
 
-	export interface Duration {
-	};
+	//export interface Duration {
+	//};
 
 
 	export interface EventTerm {
 		chord: Pitch[];
-		duration: Duration;
-		rest: boolean;
+		duration: Fraction;
+		/*rest: boolean;
 		space: boolean;
 		beam: Token;
 		illBeam?: Boolean;
@@ -31,15 +34,8 @@ namespace ABC {
 		tremoloCatcher?: number;
 		staff: number;
 		tick: number;
-		stemDirection: string;
+		stemDirection: string;*/
 	};
-
-
-	export interface ContextTerm {
-	};
-
-
-	export type Term = EventTerm | ContextTerm;
 
 
 	interface KeyValue {
@@ -48,18 +44,36 @@ namespace ABC {
 	};
 
 
+	export interface Control {
+		control: KeyValue;
+	};
+
+
+	interface Text {
+		text: string;
+	};
+
+
+	interface Articulation {
+		articulation: string;
+	};
+
+
 	interface Comment {
 		comment: string;
 	};
+
+
+	export type Term = Event | Control | Text;
 
 
 	type Header = KeyValue | Comment;
 
 
 	export interface BarPatch {
-		voice: number;
+		/*voice: number;
 		key: number;
-		timeSig: Fraction;
+		timeSig: Fraction;*/
 		terms: Term[];
 		bar: Token;
 	};

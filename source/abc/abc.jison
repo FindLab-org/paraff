@@ -25,9 +25,9 @@
 	};
 
 
-	const measure = (music, bar) => {
+	const patch = (terms, bar) => {
 		return {
-			music,
+			terms,
 			bar,
 		};
 	};
@@ -254,7 +254,7 @@ string_content
 	;
 
 body
-	: measures
+	: patches							-> ({patches: $1})
 	;
 
 frac
@@ -298,14 +298,14 @@ lower_phonet
 	: a
 	;
 
-measures
-	: measure							-> [$1]
-	| measures measure					-> [...$1, $2]
-	| measures comment					-> $1
+patches
+	: patch								-> [$1]
+	| patches patch						-> [...$1, $2]
+	| patches comment					-> $1
 	;
 
-measure
-	: music bar							-> measure($1, $2)
+patch
+	: music bar							-> patch($1, $2)
 	;
 
 bar
