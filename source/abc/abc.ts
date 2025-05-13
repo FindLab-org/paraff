@@ -92,8 +92,14 @@ namespace ABC {
 	};
 
 
+	interface Measure {
+		index: number;
+		voices: BarPatch[];
+	};
+
+
 	interface Body {
-		patches: BarPatch[];
+		measures: Measure[];
 	};
 
 

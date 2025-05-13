@@ -26,7 +26,14 @@
 
 
 	const patch = (terms, bar) => {
+		const control = {};
+		terms.forEach(term => {
+			if (term.control)
+				control[term.control.name] = term.control.value;
+		});
+
 		return {
+			control,
 			terms,
 			bar,
 		};
@@ -61,10 +68,32 @@
 	});
 
 
-	const tune = (header, body) => ({
-		header,
-		body,
-	});
+	const tune = (header, body) => {
+		const {patches} = body;
+		const measures = [];
+		let measure = null;
+		let lastVoice = 1;
+		patches.forEach(patch => {
+			const voice = patch.control.V || 1;
+			if (voice <= lastVoice) {
+				if (measure)
+					measures.push(measure);
+				measure = {voices: []};
+			}
+			measure.voices.push(patch);
+		});
+
+		measures.push(measure);
+
+		measures.forEach((measure, index) => measure.index = index + 1);
+
+		return {
+			header,
+			body: {
+				measures,
+			},
+		};
+	};
 
 
 	const grace = (events, acciaccatura) => ({
@@ -123,8 +152,6 @@ P									\b[P](?=[A-Ga-g]\b)
 
 SPECIAL								[:!^_,'/<>={}()\[\]|.\-+]
 
-//COMMENTS							^[%].*
-
 
 %%
 
@@ -144,7 +171,6 @@ SPECIAL								[:!^_,'/<>={}()\[\]|.\-+]
 <spec_comment>[(){}\[\]|]			return yytext
 
 \s+									{}
-//{COMMENTS}							{}
 
 {SPECIAL}							return yytext
 
